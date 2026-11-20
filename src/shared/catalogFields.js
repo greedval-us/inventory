@@ -1,6 +1,6 @@
 export const FIELD_TYPE_LABELS = Object.freeze({
   text: 'Текст', number: 'Число', date: 'Дата', datetime: 'Дата и время', month: 'Месяц и год',
-  select: 'Выпадающий список', checkbox: 'Флажок',
+  select: 'Выпадающий список', checkbox: 'Флажок', files: 'Файлы',
 });
 
 export function normalizeLabel(value) {
@@ -17,6 +17,7 @@ export function formatTemporalValue(type, value) {
 }
 
 export function formatCellValue(type, value) {
+  if (type === 'files') return (value ?? []).map(file => file.name).join(', ');
   if (type === 'checkbox' || typeof value === 'boolean') return value ? 'Да' : 'Нет';
   return String(formatTemporalValue(type, value));
 }

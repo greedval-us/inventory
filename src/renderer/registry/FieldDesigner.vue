@@ -2,6 +2,7 @@
 import { nextTick, ref } from 'vue';
 import { ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-vue-next';
 import { FIELD_TYPE_LABELS } from '../../shared/catalogFields.js';
+import { ATTACHMENT_KINDS } from '../../shared/attachmentKinds.js';
 import { fieldDraft, type FieldDraft } from './fieldDraft';
 import FieldOptionPreview from './FieldOptionPreview.vue';
 import SelectOptionEditor from './SelectOptionEditor.vue';
@@ -77,6 +78,12 @@ function removeField(id: number) {
             </label>
           </details>
         </div>
+        <label v-if="field.type === 'files'" class="control list-options">
+          Разрешённые файлы
+          <select v-model="field.fileKind" name="fieldKind">
+            <option v-for="kind in ATTACHMENT_KINDS" :key="kind.value" :value="kind.value">{{ kind.label }}</option>
+          </select>
+        </label>
         <template v-if="field.type === 'select'">
           <SelectOptionEditor v-if="field.source?.type === 'select'" v-model="field.choices" />
           <FieldOptionPreview v-else-if="field.source && tableId != null" v-model="field.options"

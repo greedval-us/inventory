@@ -16,15 +16,18 @@ delete environment.INVENTORY_DEV_SERVER_URL;
 
 try {
   for (const phase of [
-    'initial', 'restart', 'structure', 'fieldSettings', 'typeConversion',
+    'initial', 'restart', 'layout', 'collections', 'structure', 'fieldSettings', 'typeConversion',
     'sorting', 'sortingRestart', 'sortingResetRestart', 'appearance', 'appearanceRestart',
-    'widths', 'widthsRestart',
+    'widths', 'widthsRestart', 'copySection', 'copySectionRestart',
+    'databaseRelocate', 'databaseReopen', 'databaseRestored', 'excelExport', 'collectionFilter',
+    'attachments', 'attachmentsRestart', 'photoPreview', 'excelImport',
   ]) {
     const result = spawnSync(electron, [fixture, `--user-data-dir=${profile}`, phase], {
       env: environment,
       windowsHide: true,
       encoding: 'utf8',
-      timeout: 30000,
+      // Photo preview starts the Windows Imaging Component decoder twice.
+      timeout: phase === 'photoPreview' ? 60000 : 30000,
     });
     const transcript = [`Electron: ${phase}`, result.stdout, result.stderr].join('\n');
     if (result.error) throw new Error(transcript, { cause: result.error });

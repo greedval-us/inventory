@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { Palette } from 'lucide-vue-next';
 import { useAppearanceStore } from '../stores/appearanceStore.js';
 import { useThemeStore } from '../stores/themeStore.js';
 
@@ -28,7 +29,7 @@ function selected(palette: typeof palettes[number]) {
 
 <template>
   <fieldset class="appearance-section" :disabled="!store.ready">
-    <legend>Цветовая гамма</legend>
+    <legend class="settings-title"><span><Palette :size="18" aria-hidden="true" />Цветовая гамма</span></legend>
     <div class="palette-options" role="group" aria-label="Готовые палитры">
       <button v-for="palette in palettes" :key="palette.label" type="button" class="palette-button"
         :aria-pressed="selected(palette)" :data-palette="palette.label"
@@ -52,22 +53,24 @@ function selected(palette: typeof palettes[number]) {
 </template>
 
 <style scoped>
-.palette-options, .color-controls { display: flex; flex-wrap: wrap; gap: 6px; }
-.palette-options { margin-bottom: 11px; }
+.palette-options { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
 .palette-button {
-  display: inline-flex; align-items: center; gap: 6px; min-height: 29px; padding: 3px 9px;
+  display: inline-flex; flex: 1 0 auto; align-items: center; justify-content: center; gap: 5px; min-height: 29px; padding: 3px 7px;
   color: var(--text); background: var(--control); border: 1px solid var(--line); border-radius: 7px; font-size: .8571rem;
 }
 .palette-button[aria-pressed=true] { border-color: var(--accent); background: var(--tint); }
+.palette-button:hover { background: var(--tint); }
 .palette-button i {
   width: 14px; height: 14px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgb(0 0 0 / 15%);
   background: linear-gradient(130deg, var(--swatch) 50%, var(--swatch-secondary) 50%);
 }
-.color-controls { gap: 8px 20px; }
+.color-controls { display: grid; }
 .color-choice {
-  display: flex; align-items: center; justify-content: space-between; flex: 1 1 195px; gap: 8px; min-width: 0;
-  padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--control); cursor: pointer;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0;
+  padding-block: 6px; cursor: pointer;
 }
+.color-choice + .color-choice { border-top: 1px solid var(--line); }
+.color-choice:last-child { padding-bottom: 0; }
 .color-copy { display: grid; overflow-wrap: anywhere; }
 .color-copy strong { font-size: .9286rem; font-weight: 570; }
 .color-copy small { color: var(--muted); font-size: .8214rem; }
@@ -75,4 +78,9 @@ function selected(palette: typeof palettes[number]) {
 .color-well input { appearance: none; padding: 0; width: 29px; height: 25px; border: 1px solid var(--line); border-radius: 6px; cursor: pointer; background: transparent; }
 .color-well input::-webkit-color-swatch-wrapper { padding: 2px; }
 .color-well input::-webkit-color-swatch { border: 0; border-radius: 3px; }
+@container (max-width: 355px) { .palette-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-height: 580px) {
+  .palette-options { margin-bottom: 5px; }
+  .color-choice { padding-block: 4px; }
+}
 </style>

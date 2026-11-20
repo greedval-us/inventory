@@ -4,7 +4,7 @@ import { requireCollection } from './collections.js';
 import { getTable, listTables } from './tables.js';
 import { positiveId } from './schema.js';
 import { matchingRecords } from './searchFilter.js';
-import { newestPage, readPage, readTableRows, sortedPage } from './recordPages.js';
+import { newestPage, orderedRows, readPage, readTableRows } from './recordPages.js';
 import { getTableSort, listTableSorts } from './tableSorts.js';
 
 function validatePage(offset, limit) {
@@ -21,7 +21,7 @@ export function searchRecords(db, input = {}) {
   const sort = input.sort === undefined && tableId != null ? getTableSort(db, tableId) : input.sort;
   if (sort != null) {
     const table = getTable(db, tableId);
-    const rows = sortedPage(db, table, sort, `SELECT id FROM (${sql})`, params, limit, offset);
+    const rows = orderedRows(db, table, `SELECT id FROM (${sql})`, params, { sort, limit, offset });
     return { rows, total };
   }
   const matches = newestPage(db, sql).all(...params, limit, offset);
@@ -54,7 +54,7 @@ export function searchRecordGroups(db, { collectionId, query, field, offsets = {
     const offset = Math.min(offsets[tableId] ?? 0, lastPageOffset(total, limit));
     let rows = [];
     if (total && sorts[tableId] != null) {
-      rows = sortedPage(db, table, sorts[tableId], matchingIds, [...params, tableId], limit, offset);
+      rows = orderedRows(db, table, matchingIds, [...params, tableId], { sort: sorts[tableId], limit, offset });
     } else if (total) {
       const ids = natural.all(...params, tableId, limit, offset).map(row => row.id);
       rows = readTableRows(db, table, ids);

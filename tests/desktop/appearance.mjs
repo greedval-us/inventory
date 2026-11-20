@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { DEFAULT_APPEARANCE } from '../../src/shared/settings.js';
+import { checkSettingsLayout } from './settingsLayout.mjs';
 
 const customized = { fontFamily: 'harry-potter', fontSize: 16, primaryColor: '#000000', secondaryColor: '#e87ca1' };
 const sizeInput = value => `input[name="fontSize"][value="${value}"]`;
@@ -69,7 +70,10 @@ export async function checkAppearance(window, evaluate, waitFor, phase) {
     assert.deepEqual(await evaluate('Array.from(document.querySelectorAll(\'input[name="fontSize"]\'), input => input.value).sort()'),
       ['12', '13', '14', '15', '16']);
     assert.deepEqual(await evaluate('window.inventory.getAppearance()'), DEFAULT_APPEARANCE);
+    await checkSettingsLayout(window, evaluate, waitFor, 14);
     await evaluate('localStorage.setItem("smoke-default-appearance", JSON.stringify((' + currentStyles + ')()))');
+    await evaluate(control(sizeInput(16)) + '.click()');
+    await checkSettingsLayout(window, evaluate, waitFor, 16);
     await evaluate(control(sizeInput(12)) + '.click()');
     await waitFor('getComputedStyle(' + root + ').fontSize === "12px"');
     const navigationSize = 'parseFloat(getComputedStyle(document.querySelector(".library-link")).fontSize)';
@@ -91,11 +95,7 @@ export async function checkAppearance(window, evaluate, waitFor, phase) {
   await waitFor(fonts + '?.value === "harry-potter" && ' + control(sizeInput(16)) + '?.checked');
   await verifyFont('Inventory Wizard');
   assert.deepEqual(await evaluate('window.inventory.getAppearance()'), customized);
-  for (const selector of ['.preferences-view', '.appearance-pane']) {
-    const pane = control(selector);
-    assert.ok(await evaluate(pane + '.scrollWidth <= ' + pane + '.clientWidth + 1'), 'Настройки помещаются по ширине при размере 16px');
-  }
-  assert.ok(await evaluate(reset + '.getBoundingClientRect().bottom <= window.innerHeight'), 'Сброс оформления доступен без прокрутки при 1120×740');
+  if (phase === 'appearance') await checkSettingsLayout(window, evaluate, waitFor, 16);
   if (phase === 'appearanceRestart') {
     await evaluate(reset + '.click()');
     await waitFor(fonts + '.value === "system" && ' + control(sizeInput(14)) + '.checked');

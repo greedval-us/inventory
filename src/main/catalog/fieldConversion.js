@@ -1,18 +1,7 @@
 import { CatalogError } from '../../shared/catalogError.js';
 import { formatCellValue, normalizeLabel } from '../../shared/catalogFields.js';
 import { cellValue } from './cellValues.js';
-
-export function* storedRows(db, name, fields) {
-  // node:sqlite can truncate TEXT at an embedded NUL. Read free text with its full byte length.
-  const columns = fields.map(({ key, type }) => type === 'text' ? `CAST(${key} AS BLOB) AS ${key}` : key);
-  const textFields = fields.filter(field => field.type === 'text');
-  for (const row of db.prepare(`SELECT id, ${columns.join(', ')} FROM ${name} ORDER BY id`).iterate()) {
-    for (const { key } of textFields) {
-      if (row[key] !== null) row[key] = Buffer.from(row[key]).toString('utf8');
-    }
-    yield row;
-  }
-}
+import { rowsForUpdate, storedRows } from './storedRows.js';
 
 function conversionError(field, raw, id) {
   const value = String(raw).replaceAll('\0', '␀');
@@ -99,7 +88,7 @@ export function copyConvertedRows(db, from, to, previous, retainedFields) {
   });
   const keys = retained.map(({ target }) => target.key);
   const insert = db.prepare(`INSERT INTO ${to}(id, ${keys.join(', ')}) VALUES (?, ${keys.map(() => '?').join(', ')})`);
-  for (const row of storedRows(db, from, retained.map(column => column.source))) {
+  for (const row of rowsForUpdate(db, from, retained.map(column => column.source))) {
     const values = retained.map(column => {
       const raw = row[column.target.key];
       return column.changed ? convertedValue(column, raw, row.id) : raw;

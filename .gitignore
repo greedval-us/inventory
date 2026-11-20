@@ -15,9 +15,15 @@ Inventory *.exe.blockmap
 *.dmp
 
 # Профиль Electron, базы инвентаризации и резервные копии
+inventory-files/
+Inventory-????????-????-????-????-????????????/
 /user-data/
 /userData/
 /backups/
+database-location.json
+database-location.json.*.tmp
+.inventory-*.tmp
+.inventory-*.tmp-*
 *.sqlite
 *.sqlite-*
 *.sqlite3

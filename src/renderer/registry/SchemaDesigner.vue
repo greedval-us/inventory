@@ -5,12 +5,14 @@ import { getDesktopApi } from '../infrastructure/desktopApi.js';
 import { useRegistryStore } from '../stores/registryStore';
 import { errorMessage } from './catalog';
 import FieldDesigner from './FieldDesigner.vue';
+import SectionDetails from './SectionDetails.vue';
 import { fieldDraft, fieldDefinitions } from './fieldDraft';
 
 const router = useRouter();
 const route = useRoute();
 const registry = useRegistryStore();
 const name = ref('');
+const description = ref('');
 const collectionId = ref<number | null>(null);
 const initialCollectionId = computed(() => registry.collections.find(item => item.id === Number(route.query.collection))?.id ?? null);
 watch(initialCollectionId, id => { collectionId.value = id; }, { immediate: true });
@@ -23,7 +25,10 @@ async function create() {
   error.value = '';
   busy.value = true;
   try {
-    const table = await getDesktopApi().createTable({ name: name.value.trim(), fields: fieldDefinitions(fields.value), collectionId: collectionId.value });
+    const table = await getDesktopApi().createTable({
+      name: name.value.trim(), description: description.value, collectionId: collectionId.value,
+      fields: fieldDefinitions(fields.value),
+    });
     await router.push({ name: 'section', params: { id: table.id } });
   } catch (cause) {
     error.value = errorMessage(cause, 'Не удалось создать раздел.');
@@ -39,19 +44,8 @@ async function create() {
     <form class="designer-form preference-group" @submit.prevent="create">
       <div class="form-scroll">
         <fieldset :disabled="busy">
-          <div class="section-details">
-            <label class="control section-choice">
-              Название раздела
-              <input v-model="name" name="tableName" placeholder="Например, Жёсткие диски" required />
-            </label>
-            <label v-if="registry.collections.length" class="control">
-              Коллекция
-              <select v-model="collectionId" name="collectionId">
-                <option :value="null">Без коллекции</option>
-                <option v-for="collection in registry.collections" :key="collection.id" :value="collection.id">{{ collection.name }}</option>
-              </select>
-            </label>
-          </div>
+          <SectionDetails v-model:name="name" v-model:description="description" v-model:collection-id="collectionId"
+            :collections="registry.collections" />
           <FieldDesigner v-model="fields" />
         </fieldset>
       </div>

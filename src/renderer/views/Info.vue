@@ -14,7 +14,7 @@ import InfoState from '../components/InfoState.vue';
         </div>
         <dl>
           <div><dt>Версия</dt><dd>{{ info.version }}</dd></div>
-          <div><dt>Файл базы данных</dt><dd class="path">{{ info.databasePath }}</dd></div>
+          <div><dt>Файл базы данных</dt><dd class="path">{{ info.databasePath || 'Расположение не задано' }}</dd></div>
         </dl>
       </InfoState>
     </div>

@@ -11,6 +11,7 @@ import RegistryHeading from '../registry/RegistryHeading.vue';
 import SectionResults from '../registry/SectionResults.vue';
 import RecordEditor from '../registry/RecordEditor.vue';
 import DeleteRecord from '../registry/DeleteRecord.vue';
+import ExportExcelDialog from '../registry/ExportExcelDialog.vue';
 import '../registry/registry-view.css';
 
 const store = useRegistryStore();
@@ -18,6 +19,7 @@ const resultsArea = useRegistryPageSize(store);
 const route = useRoute();
 const router = useRouter();
 const editing = ref(false);
+const exporting = ref(false);
 const record = ref<RegistryRow | null>(null);
 const deleting = ref<RegistryRow | null>(null);
 const deleteTable = computed(() => store.tables.find(table => table.id === deleting.value?.tableId));
@@ -36,6 +38,7 @@ const routeQuery = computed(() => typeof route.query.q === 'string' ? route.quer
 
 function open() {
   editing.value = false;
+  exporting.value = false;
   deleting.value = null;
   notice.value = '';
   loadedScope.value = '';
@@ -86,12 +89,20 @@ async function deleted() {
   await store.loadRows();
   showNotice('Запись удалена.');
 }
+function exported() {
+  exporting.value = false;
+  showNotice('Книга Excel сохранена.');
+}
+async function imported(added: number) {
+  await store.loadRows();
+  showNotice(`Добавлено записей: ${added}.`);
+}
 </script>
 
 <template>
   <section class="registry-view">
-    <RegistryHeading :key="scopeKey" :title="title" :table="selected" :collection="collection" @add="edit(null)"
-      @changed="store.refreshAfterStructureChange()" />
+    <RegistryHeading :key="scopeKey" :title="title" :table="selected" :collection="collection" @add="edit(null)" @export="exporting = true"
+      @changed="store.refreshAfterStructureChange()" @imported="imported" />
     <RegistrySearch v-if="store.ready && store.scopedTables.length" :scope="scope" @query="changeQuery" />
     <div ref="resultsArea" class="registry-content" :aria-busy="store.loading">
       <div v-if="store.error" class="panel">
@@ -127,6 +138,7 @@ async function deleted() {
       <div v-if="notice" role="status" class="registry-notice"><Check :size="15" aria-hidden="true" />{{ notice }}</div>
     </Transition>
     <RecordEditor v-if="editing" :tables="store.scopedTables" :initial-table="store.tableId" :record="record" @close="editing = false" @saved="saved" />
+    <ExportExcelDialog v-if="exporting" @close="exporting = false" @saved="exported" />
     <DeleteRecord v-if="deleting && deleteTable" :record="deleting" :table="deleteTable" @close="deleting = null" @deleted="deleted" />
   </section>
 </template>

@@ -36,3 +36,9 @@ jobs:
 
       - name: Собрать приложение и проверить интерфейс Electron
         run: npm run test:desktop
+
+      - name: Собрать приложение x86 на Electron 22
+        run: npm run build:win7 -- --dir --publish never
+
+      - name: Проверить упакованное приложение x86
+        run: npm run test:win7

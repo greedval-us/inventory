@@ -14,9 +14,10 @@ const props = defineProps<{
   deleteOnly?: boolean;
   removedFieldNames?: string[];
   removedOptions?: { field: string; labels: string[] }[];
-  deleteLabel: string;
-  deleteMessage: string;
+  deleteLabel?: string;
+  deleteMessage?: string;
   saveLabel?: string;
+  saveAction?: string;
 }>();
 const emit = defineEmits<{ close: []; saved: [result: Result]; deleted: [] }>();
 const panel = ref<InstanceType<typeof ModalPanel>>();
@@ -106,7 +107,7 @@ async function submit() {
           <Trash2 :size="14" aria-hidden="true" />Удалить
         </button>
         <button type="button" class="secondary" :disabled="busy" @click="cancel">Отмена</button>
-        <button ref="saveButton" type="submit" class="primary" :data-action="'save-' + kind" :disabled="!valid || busy">{{ saveLabel || 'Сохранить' }}</button>
+        <button ref="saveButton" type="submit" class="primary" :data-action="saveAction ?? 'save-' + kind" :disabled="!valid || busy">{{ saveLabel || 'Сохранить' }}</button>
       </footer>
     </form>
   </ModalPanel>

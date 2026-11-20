@@ -40,14 +40,18 @@ async function exerciseRegistry(phase) {
   const action = name => '[data-action="' + name + '"]';
   const diskSection = 'Жёсткие диски';
   const documentSection = 'Документы';
+  const firstDescription = 'Резервные накопители.\nХранятся в шкафу № 3.';
+  const updatedDescription = 'Архивные диски.\nОтветственный — ИТ-отдел.';
+  const descriptionInput = 'textarea[name=sectionDescription]';
   async function allRecords() {
     await click('a[href="#/"]');
     await find('a[href="#/"][aria-current=page]');
   }
 
-  async function createSection(name, fields) {
+  async function createSection(name, fields, description) {
     await click('a[href="#/sections/new"]');
     await fill(await find('input[name=tableName]'), name);
+    if (description) await fill(await find(descriptionInput), description);
     for (const [i, [label, type, options]] of fields.entries()) {
       if (i) await click(action('add-field'));
       await fill(await find('input[name=fieldLabel]', i), label);
@@ -114,11 +118,25 @@ async function exerciseRegistry(phase) {
     for (const value of ['2048', 'SATA', 'Да']) {
       if (!row.textContent.includes(value)) throw new Error('В восстановленной записи отсутствует ' + value);
     }
+    await click('nav a[href="#/sections/' + disks.dataset.sectionId + '"]');
+    await until('Описание после перезапуска', () => document.querySelector('.section-description')?.textContent === updatedDescription);
+    await click(action('manage-section'));
+    const control = await find('dialog ' + descriptionInput);
+    if (control.value !== updatedDescription) throw new Error('Сохранённое описание не подставилось в форму.');
+    await fill(control, '');
+    await click(action('save-section'));
+    await until('Очистка описания', () => !document.querySelector('dialog[open], .section-description'));
+    await allRecords();
     return;
   }
   await createSection(diskSection, [
     ['Модель', 'text'], ['Ёмкость', 'number'], ['Интерфейс', 'select', ['SATA', 'USB']], ['На складе', 'checkbox'],
-  ]);
+  ], firstDescription);
+  await until('Описание нового раздела', () => document.querySelector('.section-description')?.textContent === firstDescription);
+  await click(action('manage-section'));
+  await fill(await find('dialog ' + descriptionInput), updatedDescription);
+  await click(action('save-section'));
+  await until('Обновлённое описание', () => document.querySelector('.section-description')?.textContent === updatedDescription);
   await createSection(documentSection, [['Название', 'text'], ['Комментарий', 'text']]);
   await allRecords();
   const [emptyDisks, emptyDocuments] = await expectGroups(diskSection, documentSection);

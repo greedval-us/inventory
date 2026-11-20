@@ -7,11 +7,25 @@ import { DEFAULT_APPEARANCE } from '../../src/shared/settings.js';
 test('bridge предоставляет только операции приложения и проверяет настройки перед IPC', async () => {
   const bridge = createBridge(async (...args) => args);
   assert.deepEqual(Object.keys(bridge).sort(), [
-    'createTable', 'deleteCollection', 'deleteRecord', 'deleteTable', 'getAppearance', 'getInfo', 'getTheme',
-    'listCollections', 'listColumnWidths', 'listTableSorts', 'listTables', 'moveTable', 'previewFieldOptions', 'saveCollection', 'saveRecord',
+    'copyTableStructure', 'createTable', 'deleteCollection', 'deleteRecord', 'deleteTable', 'exportExcel', 'getAppearance', 'getInfo', 'getTheme',
+    'listCollections', 'listColumnWidths', 'listTableSorts', 'listTables', 'moveTable', 'openDatabase', 'previewFieldOptions', 'relocateDatabase', 'saveCollection', 'saveRecord',
     'searchRecordGroups', 'searchRecords', 'setAppearance', 'setColumnWidth', 'setTableSort', 'setTheme', 'updateTable',
-  ]);
+    'pickAttachments', 'discardAttachments', 'saveAttachmentAs', 'previewAttachment',
+    'getAttachmentFolder', 'chooseAttachmentFolder', 'resetAttachmentFolder',
+    'openExcelImport', 'checkExcelImport', 'applyExcelImport', 'closeExcelImport',
+  ].sort());
   assert.deepEqual(await bridge.getInfo(), [CHANNELS.GET_INFO]);
+  assert.deepEqual(await bridge.relocateDatabase('/unused/path'), [CHANNELS.RELOCATE_DATABASE]);
+  assert.deepEqual(await bridge.openDatabase('/unused/file'), [CHANNELS.OPEN_DATABASE]);
+  assert.deepEqual(await bridge.chooseAttachmentFolder('/unused'), [CHANNELS.CHOOSE_ATTACHMENT_FOLDER]);
+  assert.deepEqual(await bridge.resetAttachmentFolder('/unused'), [CHANNELS.RESET_ATTACHMENT_FOLDER]);
+  assert.deepEqual(await bridge.pickAttachments({ tableId: 1, fieldKey: 'f_1' }, '/unused/file'), [
+    CHANNELS.PICK_ATTACHMENTS, { tableId: 1, fieldKey: 'f_1' },
+  ]);
+  const photo = { tableId: 1, fieldKey: 'f_2', recordId: null, id: 'photo-id' };
+  assert.deepEqual(await bridge.previewAttachment(photo, '/unused/file'), [CHANNELS.PREVIEW_ATTACHMENT, photo]);
+  const selection = { tableId: 2, collectionId: null, field: '', query: '', sections: [{ tableId: 2, fieldKeys: ['f_1'] }] };
+  assert.deepEqual(await bridge.exportExcel(selection, '/unused/file'), [CHANNELS.EXPORT_EXCEL, selection]);
   assert.deepEqual(await bridge.getTheme(), [CHANNELS.GET_THEME]);
   assert.deepEqual(await bridge.setTheme('light'), [CHANNELS.SET_THEME, 'light']);
   await assert.rejects(bridge.setTheme({ theme: 'dark' }));
@@ -27,6 +41,8 @@ test('bridge предоставляет только операции прило
   assert.deepEqual(await bridge.setColumnWidth(width), [CHANNELS.SET_COLUMN_WIDTH, width]);
   const schema = { name: 'Документы', fields: [{ label: 'Номер', type: 'text' }] };
   assert.deepEqual(await bridge.createTable(schema), [CHANNELS.CREATE_TABLE, schema]);
+  const copy = { sourceId: 2, name: 'Архив', collectionId: null };
+  assert.deepEqual(await bridge.copyTableStructure(copy), [CHANNELS.COPY_TABLE_STRUCTURE, copy]);
   const update = { id: 1, name: 'Акты', collectionId: 3 };
   assert.deepEqual(await bridge.updateTable(update), [CHANNELS.UPDATE_TABLE, update]);
   const field = { tableId: 1, fieldKey: 'f_1' };

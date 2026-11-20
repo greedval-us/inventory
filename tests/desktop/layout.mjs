@@ -137,6 +137,20 @@ export async function checkLayout(window, evaluate, waitFor) {
   const debuggerClient = window.webContents.debugger;
   debuggerClient.attach();
   try {
+    // A wide table already on screen should switch scrollbars just like a newly opened table.
+    for (const mode of ['active', 'none']) {
+      await debuggerClient.sendCommand('Emulation.setEmulatedMedia', { features: [{ name: 'forced-colors', value: mode }] });
+      await waitFor('matchMedia("(forced-colors: ' + mode + ')").matches');
+      assert.ok(await evaluate(`(() => {
+        const grid = document.querySelector('.grid-scroll');
+        const reference = document.createElement('div');
+        reference.style.cssText = 'position: absolute; width: 60px; height: 40px; overflow-x: scroll;';
+        document.body.append(reference);
+        const expected = reference.offsetHeight - reference.clientHeight;
+        reference.remove();
+        return grid.scrollWidth > grid.clientWidth && grid.offsetHeight - grid.clientHeight === expected;
+      })()`), 'Existing table should keep its scrollbar when forced colors are ' + mode);
+    }
     await debuggerClient.sendCommand('Emulation.setEmulatedMedia', { features: [{name: 'prefers-reduced-motion', value: 'reduce'}] });
     await waitFor("matchMedia('(prefers-reduced-motion: reduce)').matches");
     assert.ok(await evaluate(`[...document.querySelectorAll('nav a, main button')].every(el => {

@@ -3,6 +3,7 @@ import { createPinia } from 'pinia';
 import App from './App.vue';
 import './appearance/font-assets.css';
 import './style.css';
+import './appearance/scrollbars.css';
 import './registry/registry.css';
 import './registry/forms.css';
 import { router } from './router/index.js';

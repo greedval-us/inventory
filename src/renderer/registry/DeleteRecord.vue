@@ -10,7 +10,10 @@ const busy = ref(false);
 const panel = ref<InstanceType<typeof ModalPanel>>();
 const error = ref('');
 const preview = computed(() => {
-  const field = props.table.fields.find(f => props.record.values[f.key] != null && props.record.values[f.key] !== '');
+  const field = props.table.fields.find(f => {
+    const value = props.record.values[f.key];
+    return Array.isArray(value) ? value.length > 0 : value != null && value !== '';
+  });
   return field ? field.label + ' — ' + displayCell(field.type, props.record.values[field.key]) : '';
 });
 async function remove() {

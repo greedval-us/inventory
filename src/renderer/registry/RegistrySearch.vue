@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ChevronDown, FolderSearch, Search } from 'lucide-vue-next';
 import { useRegistryStore } from '../stores/registryStore';
+import CollectionFilter from './CollectionFilter.vue';
 import SectionFilter from './SectionFilter.vue';
 
 const props = defineProps<{ scope: 'home' | 'collection' | 'section' }>();
@@ -24,6 +25,7 @@ const labels = { home: 'Поиск по всем разделам', collection: 
       <ChevronDown :size="13" aria-hidden="true" />
     </div>
     <div class="registry-scope-filters">
+      <CollectionFilter v-if="scope === 'home'" />
       <SectionFilter v-if="scope !== 'section'" />
       <RouterLink v-if="scope !== 'home'" class="global-search-link" data-action="search-all-sections" title="Искать во всех разделах"
         aria-label="Искать во всех разделах" :to="{ name: 'home', query: store.query ? { q: store.query } : {} }">

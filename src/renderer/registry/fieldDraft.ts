@@ -8,6 +8,7 @@ export interface FieldDraft {
   source?: TableField;
   label: string;
   type: FieldType;
+  fileKind: string;
   required: boolean;
   hint: string;
   options: string;
@@ -17,6 +18,7 @@ export interface FieldDraft {
 export function fieldDraft(id: number, source?: TableField): FieldDraft {
   return {
     id, source, label: source?.label ?? '', type: source?.type ?? 'text',
+    fileKind: source?.fileKind ?? 'any',
     required: source?.required ?? false, hint: source?.hint ?? '', options: '',
     choices: (source?.options ?? []).map((label, index) => ({ id: index, label, source: label })),
   };
@@ -25,6 +27,7 @@ export function fieldDraft(id: number, source?: TableField): FieldDraft {
 export function matchesStoredField(draft: FieldDraft, stored: TableField) {
   if (draft.source?.key !== stored.key || draft.type !== stored.type || draft.label.trim() !== stored.label ||
       draft.required !== Boolean(stored.required) || draft.hint.trim() !== (stored.hint ?? '')) return false;
+  if (draft.type === 'files' && draft.fileKind !== (stored.fileKind ?? 'any')) return false;
   if (!stored.options) return true;
   return draft.choices.length === stored.options.length && draft.choices.every((choice, index) =>
     choice.source === stored.options![index] && choice.label.trim() === choice.source);
@@ -44,6 +47,7 @@ export function fieldDefinitions(drafts: FieldDraft[]) {
     const hint = field.hint.trim();
     const definition = { ...identity, label, type: field.type,
       ...(field.required ? { required: true } : {}), ...(hint ? { hint } : {}) };
+    if (field.type === 'files') return { ...definition, fileKind: field.fileKind };
     if (field.type !== 'select') return definition;
     const editingOptions = field.source?.type === 'select';
     const collectingOptions = field.source && !editingOptions;

@@ -1,7 +1,7 @@
 {
   "name": "inventory",
   "productName": "Inventory",
-  "version": "0.11.0",
+  "version": "0.20.0",
   "private": true,
   "license": "UNLICENSED",
   "description": "Локальное настольное приложение для инвентаризации.",
@@ -20,7 +20,9 @@
     "check": "npm test && npm run build",
     "test:desktop": "npm run build && node scripts/checkDesktop.mjs",
     "pack:win": "npm run build && electron-builder --config electron-builder.config.cjs --win --dir",
-    "build:win": "npm run build && electron-builder --config electron-builder.config.cjs --win nsis portable"
+    "build:win": "npm run build && electron-builder --config electron-builder.config.cjs --win nsis portable",
+    "build:win7": "node scripts/legacy/prepareSqlite.mjs && node scripts/legacy/buildMain.mjs && vite build --mode win7 && electron-builder --config electron-builder.win7.cjs --win --ia32",
+    "test:win7": "node scripts/legacy/checkWindows.mjs"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "6.0.1",
@@ -28,9 +30,11 @@
     "cross-env": "10.1.0",
     "electron": "38.8.6",
     "electron-builder": "24.13.3",
+    "esbuild": "0.28.2",
     "lucide-vue-next": "0.536.0",
     "pinia": "3.0.3",
     "resedit": "3.1.0",
+    "tar": "7.5.21",
     "vite": "7.3.7",
     "vue": "3.5.44",
     "vue-router": "4.5.1",
@@ -41,5 +45,8 @@
       "tar": "7.5.21"
     },
     "builder-util-runtime": "9.7.0"
+  },
+  "dependencies": {
+    "exceljs": "4.4.0"
   }
 }

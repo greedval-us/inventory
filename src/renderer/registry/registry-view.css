@@ -9,15 +9,19 @@
   min-height: 0;
 }
 .registry-heading {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   flex: none;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 5px 12px;
   margin-bottom: 15px;
 }
 .registry-heading h1 { min-width: 0; margin: 0; overflow-wrap: anywhere; }
 .registry-title { min-width: 0; }
+.section-description {
+  grid-column: 1 / -1; min-width: 0; max-height: 4.5em; overflow: auto; margin: 0;
+  white-space: pre-wrap; overflow-wrap: anywhere; color: var(--muted); line-height: 1.5;
+}
 .heading-actions, .registry-scope-filters { display: flex; flex: none; align-items: center; gap: 6px; }
 .collection-parent {
   display: inline-flex; align-items: center; gap: 5px; margin-bottom: 3px;
@@ -42,7 +46,7 @@
   gap: 7px;
   margin-bottom: 13px;
 }
-.registry-search, .registry-field, .section-filter summary, .global-search-link {
+.registry-search, .registry-field, .scope-filter summary, .global-search-link {
   display: flex;
   align-items: center;
   min-width: 0;
@@ -77,7 +81,7 @@
 .registry-field select { padding-inline: 10px 28px; appearance: none; cursor: pointer; }
 .registry-field select option { background: var(--surface); color: var(--text); }
 .registry-field > svg { position: absolute; right: 9px; pointer-events: none; color: var(--muted); }
-.global-search-link, .section-filter summary {
+.global-search-link, .scope-filter summary {
   justify-content: center;
   gap: 6px;
   padding: 0 10px;
@@ -86,17 +90,17 @@
   white-space: nowrap;
   transition: background-color 140ms ease, border-color 140ms ease;
 }
-.global-search-link:hover, .section-filter summary:hover, .section-filter[open] summary {
+.global-search-link:hover, .scope-filter summary:hover, .scope-filter[open] summary {
   background: var(--surface);
   border-color: color-mix(in srgb, var(--muted) 45%, var(--line));
 }
-.section-filter { position: relative; min-width: 0; }
-.section-filter summary { list-style: none; user-select: none; }
-.section-filter summary::-webkit-details-marker { display: none; }
+.scope-filter { position: relative; min-width: 0; }
+.scope-filter summary { list-style: none; user-select: none; }
+.scope-filter summary::-webkit-details-marker { display: none; }
 .filter-count { color: var(--accent); font-variant-numeric: tabular-nums; }
 .filter-chevron { color: var(--muted); transition: transform 160ms ease; }
-.section-filter[open] .filter-chevron { transform: rotate(180deg); }
-.section-filter-body {
+.scope-filter[open] .filter-chevron { transform: rotate(180deg); }
+.scope-filter-body {
   position: absolute;
   top: calc(100% + 5px);
   right: 0;
@@ -109,28 +113,31 @@
   box-shadow: var(--shadow), 0 8px 22px rgb(20 32 54 / .12);
   transform-origin: top right;
 }
-.section-filter[open] .section-filter-body { animation: registry-pop-in 145ms var(--ease) both; }
+.scope-filter[open] .scope-filter-body { animation: registry-pop-in 145ms var(--ease) both; }
 @keyframes registry-pop-in {
   from { opacity: 0; transform: translateY(-3px) scale(.97); }
   to   { opacity: 1; transform: none; }
 }
-.section-filter-heading, .section-options label, .hidden-matches, .group-heading, .grid-footer, .pager, .row-actions > div {
+.scope-filter-heading, .scope-options label, .hidden-matches, .group-heading, .grid-footer, .pager, .row-actions > div {
   display: flex;
   align-items: center;
 }
-.section-filter-heading {
+.scope-filter-heading {
   justify-content: space-between; gap: 8px; margin: 0 3px 4px; padding: 3px 3px 6px;
   border-bottom: 1px solid var(--line); font-size: .91em;
 }
+.all-collections { display: inline-flex; align-items: center; gap: 3px; }
 .registry-link-button {
   margin: 0; padding: 2px 4px; background: transparent; border: 0;
   color: var(--accent); font: inherit; font-weight: 550;
 }
 .registry-link-button:enabled:hover { text-decoration: underline; }
-.section-options { max-height: min(42dvh, 260px); overflow-y: auto; overscroll-behavior: contain; }
-.section-options label { gap: 8px; padding: 5px 6px; border-radius: 6px; overflow-wrap: anywhere; cursor: pointer; }
-.section-options label:hover, .section-options label:focus-within { background: var(--tint); }
-.section-options input { margin: 0; accent-color: var(--accent); flex: none; }
+.scope-options { max-height: min(42dvh, 260px); overflow-y: auto; overscroll-behavior: contain; }
+.scope-options label { gap: 8px; padding: 5px 6px; border-radius: 6px; overflow-wrap: anywhere; cursor: pointer; }
+.scope-options label:hover, .scope-options label:focus-within { background: var(--tint); }
+.scope-options input { margin: 0; accent-color: var(--accent); flex: none; }
+.scope-options label > span { min-width: 0; }
+.filter-empty { margin: 4px 6px; font-size: .92em; }
 
 .section-results { display: grid; gap: 12px; }
 .registry-card {
@@ -228,12 +235,32 @@
 .registry-notice svg { color: light-dark(#277b54, #68c68e); }
 .registry-toast-enter-active, .registry-toast-leave-active { transition: opacity 160ms ease, transform 160ms var(--ease); }
 .registry-toast-enter-from, .registry-toast-leave-to { opacity: 0; transform: translateY(4px); }
+@container (max-width: 860px) {
+  .heading-actions:has(.import-button) :is(.copy-section-button, .manage-button) span { display: none; }
+  .heading-actions:has(.import-button) :is(.copy-section-button, .manage-button) { width: 32px; padding: 0; }
+}
+@container (max-width: 680px) {
+  .copy-section-button span, .export-button span { display: none; }
+  .copy-section-button, .export-button { width: 32px; padding: 0; }
+}
+@container (max-width: 540px) {
+  .import-button span { display: none; }
+  .import-button { width: 32px; padding: 0; }
+}
 @container (max-width: 450px) {
   .manage-button span { display: none; }
   .manage-button { width: 32px; padding: 0; }
   .registry-filters { grid-template-columns: minmax(0, 1fr) auto; gap: 5px; }
   .registry-search { grid-column: 1 / -1; }
+  .registry-scope-filters { position: relative; }
+  .scope-filter { position: static; }
   .registry-heading { margin-bottom: 10px; }
   .record-grid th, .record-grid td { padding-inline: 7px; }
   .group-heading { padding: 6px 8px; }
+}
+@container (max-width: 380px) {
+  .registry-filters:has([data-action="collection-filter"]) { grid-template-columns: minmax(0,1fr) minmax(0,.7fr); }
+  .registry-filters:has([data-action="collection-filter"]) .registry-search { grid-column: auto; }
+  .registry-filters:has([data-action="collection-filter"]) .registry-scope-filters { grid-column: 1 / -1; }
+  .registry-filters:has([data-action="collection-filter"]) .scope-filter-body { right: auto; left: 0; }
 }

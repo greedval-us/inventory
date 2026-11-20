@@ -1,5 +1,6 @@
 import { CatalogError } from '../../shared/catalogError.js';
 import { FIELD_TYPE_LABELS, normalizeLabel } from '../../shared/catalogFields.js';
+import { attachmentKind } from '../../shared/attachmentKinds.js';
 
 export function positiveId(id) {
   if (!Number.isSafeInteger(id) || id < 1) throw new CatalogError('Некорректный идентификатор.');
@@ -10,6 +11,12 @@ export function label(value, description) {
   if (typeof value !== 'string' || !value.trim() || value.includes('\0')) {
     throw new CatalogError(`Укажите ${description}.`);
   }
+  return value.trim();
+}
+
+export function optionalText(value, description) {
+  if (value === undefined) return '';
+  if (typeof value !== 'string' || value.includes('\0')) throw new CatalogError(`Укажите ${description}.`);
   return value.trim();
 }
 
@@ -60,17 +67,19 @@ export function defineFields(definitions, previousFields = null, lastFieldId = 0
       if (!existing.delete(inputField.key)) throw new CatalogError('Неизвестный или повторяющийся столбец. Откройте настройки раздела заново.');
     }
     const field = { key: previous?.key ?? `f_${++lastFieldId}`, label: labels[index], type };
+    if (type === 'files') {
+      const kind = inputField.fileKind === undefined ? previous?.fileKind ?? 'any' : inputField.fileKind;
+      if (!attachmentKind(kind)) throw new CatalogError(`Выберите допустимые файлы для столбца «${field.label}».`);
+      field.fileKind = kind;
+    }
     if (inputField.required !== undefined && typeof inputField.required !== 'boolean') {
       throw new CatalogError('Укажите признак обязательного поля.');
     }
     if (inputField.required) field.required = true;
-    if (inputField.hint !== undefined) {
-      if (typeof inputField.hint !== 'string' || inputField.hint.includes('\0')) throw new CatalogError('Укажите текст подсказки.');
-      const hint = inputField.hint.trim();
-      if (hint) field.hint = hint;
-    }
+    const hint = optionalText(inputField.hint, 'текст подсказки');
+    if (hint) field.hint = hint;
     if (type === 'select') {
-      const collecting = previous !== undefined && previous.type !== 'select';
+      const collecting = previous !== undefined && previous.type !== 'select' && previous.type !== 'files';
       const options = collecting && inputField.options === undefined ? [] : inputField.options;
       if (!Array.isArray(options) || (!collecting && options.length === 0)) {
         throw new CatalogError(`Укажите варианты для столбца «${field.label}».`);

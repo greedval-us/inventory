@@ -101,8 +101,8 @@
   margin-top: 9px; padding: 8px 10px; color: var(--text);
   background: var(--control); border-radius: 7px; white-space: pre-wrap;
 }
-.preferences-view { overflow: auto; }
-.appearance-pane, .info-pane { padding: 18px; }
+.form-page.preferences-view { overflow: auto; }
+.info-pane { padding: 18px; }
 @keyframes sheet-appear {
   from { opacity: 0; transform: translateY(7px) scale(.985); }
   to { opacity: 1; transform: none; }
@@ -113,7 +113,7 @@
 }
 @keyframes scrim-appear { from { opacity: 0; } to { opacity: 1; } }
 @media (max-width: 520px) {
-  .form-scroll, .appearance-pane, .info-pane { padding: 12px; }
+  .form-scroll, .info-pane { padding: 12px; }
   .sheet-actions { padding: 9px 12px; }
 }
 @media (max-width: 420px) {

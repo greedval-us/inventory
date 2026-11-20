@@ -33,7 +33,11 @@ function recordCount(total: number) {
     </section>
   </div>
   <div v-else-if="!store.hiddenMatchCount" class="registry-empty">
-    <template v-if="store.hiddenSectionIds.length === store.scopedTables.length">
+    <template v-if="!store.collectionFilteredTables.length && store.selectedCollectionIds.length">
+      <FolderClosed class="empty-symbol" :size="26" aria-hidden="true" /><h2>В выбранных коллекциях нет разделов</h2>
+      <button type="button" class="secondary" @click="store.clearCollectionFilter()">Показать все коллекции</button>
+    </template>
+    <template v-else-if="!store.shownTablesById.size">
       <FolderClosed class="empty-symbol" :size="26" aria-hidden="true" /><h2>Все разделы скрыты</h2>
       <button type="button" class="secondary" @click="store.showAllSections()">Показать все разделы</button>
     </template>

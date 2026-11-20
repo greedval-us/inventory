@@ -15,8 +15,8 @@ export function createMainWindow(appPath, rendererUrl) {
   window.removeMenu();
   const contents = window.webContents;
   contents.setWindowOpenHandler(() => ({ action: 'deny' }));
-  contents.on('will-navigate', event => {
-    if (!isRendererPage(event.url, rendererUrl)) event.preventDefault();
+  contents.on('will-navigate', (event, url) => {
+    if (!isRendererPage(event.url ?? url, rendererUrl)) event.preventDefault();
   });
   contents.on('will-redirect', event => event.preventDefault());
   contents.on('will-attach-webview', event => event.preventDefault());

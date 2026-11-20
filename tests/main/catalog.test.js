@@ -149,6 +149,7 @@ test('миграция разделов с записями сохраняет S
   old.close();
   const [original] = catalog.listTables();
   const [record] = catalog.searchRecords({ query: '245' }).rows;
+  assert.equal(original.description, '');
   assert.equal(original.collectionId, null);
   assert.equal(record.values.f_1, 'Акт-245');
   const collection = catalog.saveCollection({ name: 'Учёт', tableIds: [] });
@@ -159,9 +160,11 @@ test('миграция разделов с записями сохраняет S
   assert.deepEqual(catalog.searchRecords({ query: 'документ' }).rows, [record]);
   assert.deepEqual(catalog.searchRecordGroups({ query: 'бумаги' })[0].rows, []);
   assert.deepEqual(catalog.searchRecords({ query: '245' }).rows, [record]);
-  const second = catalog.createTable({ name: 'Отчёты', fields: original.fields, collectionId: collection.id });
+  const second = catalog.copyTableStructure({ sourceId: original.id, name: 'Отчёты' });
   assert.ok(second.id > original.id);
   assert.equal(second.collectionId, collection.id);
+  assert.deepEqual(second.fields, original.fields);
+  assert.equal(catalog.searchRecords({ tableId: second.id }).total, 0);
   assert.throws(() => catalog.updateTable({ id: 17, name: '  отчёты', collectionId: null }), CatalogError);
   assert.throws(() => catalog.updateTable({ id: 17, name: 'Ошибка', collectionId: 999 }), CatalogError);
   assert.deepEqual(catalog.listTables()[0], renamed);
@@ -172,6 +175,84 @@ test('миграция разделов с записями сохраняет S
   const restored = catalog.updateTable({ id: 17, fields: [...renamed.fields, { label: 'Состояние', type: 'text' }] });
   assert.deepEqual(restored.fields.map(field => field.key), ['f_1', 'f_3']);
   assert.deepEqual(catalog.searchRecords({ query: '245' }).rows[0].values, { f_1: 'Акт-245', f_3: null });
+});
+
+test('сохраняет многострочное описание раздела и независимо изменяет описание копии', t => {
+  const { db, catalog } = fixture(t);
+  const fields = [{ type: 'text', label: 'Код' }];
+  const originalText = 'Ответственный: склад.\n\nУчитывать диски и адаптеры.';
+  const source = catalog.createTable({ name: 'Техника', description: originalText, fields });
+  const record = catalog.saveRecord({ tableId: source.id, values: { f_1: 'SSD-245' } });
+  assert.equal(source.description, originalText);
+  const copy = catalog.copyTableStructure({ sourceId: source.id, name: 'Резерв' });
+  assert.equal(copy.description, originalText);
+  const edited = catalog.updateTable({ id: source.id, description: '  Архив\nза январь.  ' });
+  assert.equal(edited.description, 'Архив\nза январь.');
+  assert.deepEqual(edited.fields, source.fields);
+  const renamed = catalog.updateTable({ id: source.id, name: 'Техника в архиве' });
+  assert.equal(renamed.description, edited.description);
+  for (const description of [false, null, 'Архив\0склад']) {
+    assert.throws(() => catalog.updateTable({ id: source.id, description }), CatalogError);
+  }
+  db.close();
+  assert.deepEqual(catalog.listTables(), [renamed, copy]);
+  const cleared = catalog.updateTable({ id: copy.id, description: '' });
+  assert.equal(cleared.description, '');
+  assert.deepEqual(catalog.listTables(), [renamed, cleared]);
+  assert.deepEqual(catalog.searchRecords({ tableId: source.id }).rows, [record]);
+});
+
+test('копия использует актуальную структуру раздела и независимо хранит поля, записи и настройки вида', t => {
+  const { db, catalog } = fixture(t);
+  const origin = catalog.createTable({ name: 'Склад', fields: [
+    { label: 'Удаляемое', type: 'number' }, { label: 'Название', type: 'text' },
+    { label: 'Статус', type: 'select', options: ['Новый', 'Выдан'], required: true, hint: 'Выберите статус' },
+  ] });
+  const collection = catalog.saveCollection({ name: 'Запасы', tableIds: [origin.id] });
+  const source = catalog.updateTable({ id: origin.id, fields: [
+    origin.fields[2], origin.fields[1], { label: 'Месяц учёта', type: 'month' },
+  ] });
+  const record = catalog.saveRecord({ tableId: source.id, values: { f_3: 'Новый', f_2: 'Мышь' } });
+  catalog.setTableSort({ tableId: source.id, sort: { key: 'f_3', direction: 'desc' } });
+  catalog.setColumnWidth({ tableId: source.id, fieldKey: 'f_2', width: 200 });
+
+  const copy = catalog.copyTableStructure({ sourceId: source.id, name: 'Склад филиала' });
+  assert.equal(copy.collectionId, collection.id);
+  assert.deepEqual(copy.fields, [
+    { ...source.fields[0], key: 'f_1' }, { ...source.fields[1], key: 'f_2' }, { ...source.fields[2], key: 'f_3' },
+  ]);
+  db.close();
+  assert.deepEqual(catalog.listTables(), [source, copy]);
+  assert.deepEqual(catalog.searchRecords({ tableId: copy.id }), { total: 0, rows: [] });
+  assert.equal(catalog.listTableSorts()[copy.id], undefined);
+  assert.equal(catalog.listColumnWidths()[copy.id], undefined);
+  assert.throws(() => catalog.saveRecord({ tableId: copy.id, values: {} }), CatalogError);
+  const newRecord = catalog.saveRecord({ tableId: copy.id, values: { f_1: 'Выдан' } });
+  catalog.updateTable({ id: copy.id, fields: [
+    { ...copy.fields[0], options: ['Новый', 'Списан'], optionSources: ['Новый', 'Выдан'] }, ...copy.fields.slice(1),
+  ] });
+  assert.deepEqual(catalog.searchRecords({ tableId: source.id }).rows, [record]);
+  assert.deepEqual(catalog.listTables()[0], source);
+  assert.deepEqual(catalog.searchRecords({ tableId: copy.id }).rows, [
+    { ...newRecord, values: { ...newRecord.values, f_1: 'Списан' } },
+  ]);
+});
+
+test('копирование проверяет имя, исходный раздел и выбранную коллекцию до сохранения', t => {
+  const { catalog } = fixture(t);
+  const collection = catalog.saveCollection({ name: 'Офис', tableIds: [] });
+  const source = catalog.createTable({ name: 'Акты', collectionId: collection.id, fields: [{ type: 'text', label: 'Код' }] });
+  const request = { sourceId: source.id, name: 'Архив' };
+  for (const invalid of [{ name: ' акты ' }, { name: '' }, { sourceId: 999 }, { collectionId: 999 }]) {
+    assert.throws(() => catalog.copyTableStructure({ ...request, ...invalid }), CatalogError);
+  }
+  assert.deepEqual(catalog.listTables(), [source]);
+  const ungrouped = catalog.copyTableStructure({ ...request, collectionId: null });
+  assert.equal(ungrouped.collectionId, null);
+  assert.equal(ungrouped.id, source.id + 1);
+  const destination = catalog.saveCollection({ name: 'Склад', tableIds: [] });
+  const moved = catalog.copyTableStructure({ ...request, name: 'Бланки', collectionId: destination.id });
+  assert.equal(moved.collectionId, destination.id);
 });
 
 test('коллекции объединяют выбранные разделы, поддерживают общий поиск и сохраняют записи при расформировании', t => {

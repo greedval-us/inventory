@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
+import { nextTick, onBeforeUnmount, onMounted, ref, useId } from 'vue';
 import { X } from 'lucide-vue-next';
 
 const props = defineProps<{ title: string; busy: boolean }>();
 const emit = defineEmits<{ close: [] }>();
+const titleId = useId();
 const dialog = ref<HTMLDialogElement>();
 const closing = ref(false);
 onMounted(() => dialog.value?.showModal());
@@ -30,10 +31,10 @@ defineExpose({ finish });
 </script>
 
 <template>
-  <dialog ref="dialog" class="record-dialog" aria-labelledby="modal-title" :data-closing="closing || undefined"
+  <dialog ref="dialog" class="record-dialog" :aria-labelledby="titleId" :data-closing="closing || undefined"
     :inert="closing" @cancel.prevent="cancel">
     <header class="sheet-heading">
-      <h2 id="modal-title">{{ title }}</h2>
+      <h2 :id="titleId">{{ title }}</h2>
       <button type="button" class="icon-button sheet-close" aria-label="Закрыть" :disabled="busy" @click="cancel"><X :size="15" /></button>
     </header>
     <slot :cancel="cancel" />

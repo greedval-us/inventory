@@ -18,22 +18,28 @@ test('ширина привязана к разделу и постоянном�
     database.close();
     rmSync(directory, { recursive: true, force: true });
   });
-  // Populate the last published schema before opening it through the current migration runner.
+  // Seed schema v5 directly so the fixture stays independent of the current catalog API.
   const previous = new DatabaseSync(file);
-  const fields = [{ type: 'text', label: 'Код' }, { type: 'number', label: 'Объём' }];
-  let disks, docs;
+  const fields = [{ key: 'f_1', type: 'text', label: 'Код' }, { key: 'f_2', type: 'number', label: 'Объём' }];
   try {
     previous.exec('PRAGMA foreign_keys = ON; PRAGMA application_id = 0x494e5654; PRAGMA user_version = 5;');
     for (const migration of migrations.slice(0, 5)) previous.exec(migration);
-    const old = createCatalog({ open: () => previous });
-    disks = old.createTable({ name: 'Диски', fields });
-    docs = old.createTable({ name: 'Документы', fields });
-    old.saveRecord({ tableId: disks.id, values: { f_1: 'SSD-245', f_2: 1024 } });
-    old.setTableSort({ tableId: disks.id, sort: { key: 'f_1', direction: 'desc' } });
+    const insert = previous.prepare('INSERT INTO catalog_tables(id, name, name_key, fields, last_field_id) VALUES (?, ?, ?, ?, 2)');
+    insert.run(1, 'Диски', 'диски', JSON.stringify(fields));
+    insert.run(2, 'Документы', 'документы', JSON.stringify(fields));
+    previous.exec(`
+      UPDATE catalog_table_sequence SET last_id = 2;
+      CREATE TABLE inventory_1 (id INTEGER PRIMARY KEY REFERENCES catalog_records(id) ON DELETE CASCADE, f_1 TEXT, f_2 REAL) STRICT;
+      CREATE TABLE inventory_2 (id INTEGER PRIMARY KEY REFERENCES catalog_records(id) ON DELETE CASCADE, f_1 TEXT, f_2 REAL) STRICT;
+      INSERT INTO catalog_records VALUES (1, 1, '{"код":"ssd-245","объем":"1024"}');
+      INSERT INTO inventory_1 VALUES (1, 'SSD-245', 1024);
+      INSERT INTO catalog_table_sorts VALUES (1, 'f_1', 'desc');
+    `);
   } finally {
     previous.close();
   }
   const catalog = createCatalog(database);
+  const [disks, docs] = catalog.listTables();
   assert.deepEqual(catalog.listColumnWidths(), {});
   assert.deepEqual(catalog.searchRecords({ tableId: disks.id }).rows[0].values, { f_1: 'SSD-245', f_2: 1024 });
   assert.deepEqual(catalog.listTableSorts(), { [disks.id]: { key: 'f_1', direction: 'desc' } });

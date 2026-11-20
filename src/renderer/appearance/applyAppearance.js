@@ -18,8 +18,18 @@ function readableAccent(color, background, darkMode) {
     const tone = color.map(channel => Math.round(channel + (end - channel) * step / 100));
     const light = luminance(tone);
     if ((Math.max(light, backdrop) + .05) / (Math.min(light, backdrop) + .05) >= 4.5) {
-      return 'rgb(' + tone.join(' ') + ')';
+      return tone;
     }
+  }
+}
+
+function setPaletteColor(style, token, channels, hex) {
+  style.setProperty('--' + token, hex ?? (channels ? 'rgb(' + channels.join(' ') + ')' : ''));
+  if (import.meta.env.MODE === 'win7') {
+    // The legacy stylesheet mixes these channels using calc().
+    ['r', 'g', 'b'].forEach((channel, index) => {
+      style.setProperty('--w7-' + token + '-' + channel, channels?.[index] ?? '');
+    });
   }
 }
 
@@ -29,14 +39,11 @@ export function applyAppearance(root, preferences) {
   root.dataset.font = fontFamily;
   root.toggleAttribute('data-custom-primary', Boolean(primaryColor));
   root.toggleAttribute('data-custom-secondary', Boolean(secondaryColor));
-  root.style.setProperty('--choice-secondary', secondaryColor ?? '');
-  root.style.setProperty('--choice-primary', primaryColor ?? '');
-  if (primaryColor) {
-    const color = rgb(primaryColor);
-    root.style.setProperty('--primary-ink', luminance(color) > .179 ? '#000' : '#fff');
-    root.style.setProperty('--primary-light', readableAccent(color, '#c7ccd4', false));
-    root.style.setProperty('--primary-dark', readableAccent(color, '#515662', true));
-  } else {
-    for (const token of ['--primary-ink', '--primary-light', '--primary-dark']) root.style.removeProperty(token);
-  }
+  const primary = primaryColor && rgb(primaryColor);
+  const secondary = secondaryColor && rgb(secondaryColor);
+  setPaletteColor(root.style, 'choice-primary', primary, primaryColor);
+  setPaletteColor(root.style, 'choice-secondary', secondary, secondaryColor);
+  setPaletteColor(root.style, 'primary-light', primary && readableAccent(primary, '#c7ccd4', false));
+  setPaletteColor(root.style, 'primary-dark', primary && readableAccent(primary, '#515662', true));
+  root.style.setProperty('--primary-ink', primary ? (luminance(primary) > .179 ? '#000' : '#fff') : '');
 }

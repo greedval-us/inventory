@@ -72,4 +72,22 @@ export const migrations = [
       );
     END;
   `,
+  `ALTER TABLE catalog_tables ADD COLUMN description TEXT NOT NULL DEFAULT '';`,
+  `
+    CREATE TABLE catalog_attachments (
+      id TEXT PRIMARY KEY,
+      record_id INTEGER NOT NULL REFERENCES catalog_records(id) ON DELETE CASCADE,
+      field_key TEXT NOT NULL,
+      position INTEGER NOT NULL CHECK (position >= 0),
+      name TEXT NOT NULL,
+      size INTEGER NOT NULL CHECK (size >= 0)
+    ) STRICT;
+    CREATE INDEX catalog_attachments_by_field ON catalog_attachments(record_id, field_key, position);
+    CREATE TABLE removed_attachments (id TEXT PRIMARY KEY, storage TEXT) STRICT;
+    CREATE TRIGGER queue_removed_attachment AFTER DELETE ON catalog_attachments
+    BEGIN
+      INSERT OR IGNORE INTO removed_attachments(id, storage)
+      VALUES (OLD.id, (SELECT value FROM app_settings WHERE key = 'attachmentStorage'));
+    END;
+  `,
 ];

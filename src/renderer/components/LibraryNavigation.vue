@@ -129,7 +129,7 @@ async function drop(event: DragEvent, target: number | 'ungroup' | 'delete') {
 
 <style scoped>
 .library-navigation { display: flex; flex-direction: column; min-height: 0; margin-block: 20px 8px; }
-.library-tree { display: grid; align-content: start; gap: 1px; min-height: 0; overflow: auto; scrollbar-width: thin; }
+.library-tree { display: grid; align-content: start; gap: 1px; min-height: 0; overflow: auto; }
 h2 { margin: 0 10px 5px; font-size: 0.8214rem; font-weight: 640; color: var(--muted); letter-spacing: .005em; }
 .collection-node + .ungrouped-node { margin-top: 12px; }
 .collection-node, .ungrouped-node { border-radius: 7px; }
