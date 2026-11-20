@@ -1,0 +1,16 @@
+Harry Potter (Russian Version of Gfdtk), version 1.00, 22 March 2010.
+Lettering based on Harry P by Phoenix Phonts & GeM. Cyrillic version by Gfdtk.
+The upstream font includes its original font metadata.
+The Inventory edition adds uppercase and lowercase Cyrillic Yo (U+0401, U+0451)
+composed from the Cyrillic E and period glyphs of the same typeface.
+
+Original Harry P and author's usage information
+https://www.dafont.com/harry_p.font
+https://www.dafont.com/font-comment.php?file=harry_p
+
+Cyrillic edition and usage information
+https://ffont.ru/en/font/harry-potter-russian-version-of-gfdtk
+
+Source file
+https://github.com/bormotovilya-ops/SpaceGrow/blob/bf15458b5e13d830100050082b2b91d94328e295/public/fonts/harry-potter-russian-version-of-gfdtk-regular.ttf
+Upstream SHA-256 2e21b6595866041834447a458e6a98e8edce1fbaa6a06e30f5c4b46609349c5f

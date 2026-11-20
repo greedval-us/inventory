@@ -15,15 +15,19 @@ delete environment.ELECTRON_RUN_AS_NODE;
 delete environment.INVENTORY_DEV_SERVER_URL;
 
 try {
-  for (const phase of ['initial', 'restart']) {
+  for (const phase of [
+    'initial', 'restart', 'structure', 'fieldSettings', 'typeConversion',
+    'sorting', 'sortingRestart', 'sortingResetRestart', 'appearance', 'appearanceRestart',
+    'widths', 'widthsRestart',
+  ]) {
     const result = spawnSync(electron, [fixture, `--user-data-dir=${profile}`, phase], {
       env: environment,
       windowsHide: true,
       encoding: 'utf8',
       timeout: 30000,
     });
-    if (result.error) throw result.error;
-    const transcript = [result.stdout, result.stderr].join('\n');
+    const transcript = [`Electron: ${phase}`, result.stdout, result.stderr].join('\n');
+    if (result.error) throw new Error(transcript, { cause: result.error });
     assert.equal(result.status, 0, transcript);
     assert.ok(result.stdout.includes(`SMOKE_OK ${phase}`), transcript);
   }

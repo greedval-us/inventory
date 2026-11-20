@@ -1,9 +1,10 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { getDesktopApi } from '../infrastructure/desktopApi.js';
+import { DEFAULT_THEME } from '../../shared/settings.js';
 
 export const useThemeStore = defineStore('theme', () => {
-  const theme = ref('system');
+  const theme = ref(DEFAULT_THEME);
   const ready = ref(false);
   const saving = ref(false);
   const error = ref('');

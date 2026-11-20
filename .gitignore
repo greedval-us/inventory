@@ -1,21 +1,50 @@
+# Зависимости и результаты сборки
 node_modules/
 /build/
 /dist/
 /release/
+Inventory *.exe
+Inventory *.exe.blockmap
+/inventory-*.tgz
+
+# Локальные инструменты, диагностика и результаты тестов
 /.cache/
 /.local/
 /coverage/
+*.log
+*.dmp
+
+# Профиль Electron, базы инвентаризации и резервные копии
+/user-data/
+/userData/
+/backups/
 *.sqlite
 *.sqlite-*
 *.sqlite3
 *.sqlite3-*
 *.db
 *.db-*
-*.log
-*.dmp
+*.bak
+*.backup
+
+# Рабочие выгрузки и таблицы, скопированные в корень проекта
+/exports/
+/*.xls
+/*.xlsx
+/*.xlsm
+/*.csv
+
+# Приватные настройки и ключи подписи
 .env
 .env.*
 !.env.example
+.npmrc
+*.pfx
+*.p12
+*.key
+*.pem
+
+# Настройки редакторов, ассистентов и ОС
 .idea/
 .vscode/
 .codex/

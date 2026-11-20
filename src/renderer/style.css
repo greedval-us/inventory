@@ -1,39 +1,98 @@
 :root {
   color-scheme: light dark;
-  font-family: 'Source Sans 3', 'Segoe UI', sans-serif;
-  --canvas: light-dark(#f5f7fa, #181d25);
-  --surface: light-dark(#ffffff, #202732);
-  --text: light-dark(#202a39, #e4ebf4);
-  --muted: light-dark(#536074, #b0becf);
-  --line: light-dark(#d6dce5, #394556);
-  --accent: light-dark(#22548e, #a8cefa);
-  --tint: light-dark(#e6effa, #293d54);
+  --system-font: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", Inter, sans-serif;
+  font: var(--ui-font-size, 14px)/1.45 var(--ui-font, var(--system-font));
+  -webkit-font-smoothing: antialiased;
+  --canvas: light-dark(#f7f8fb, #181a20);
+  --surface: light-dark(#fff, #24272e);
+  --sidebar: light-dark(#edf0f6, #20232b);
+  --control: light-dark(#fff, #2c3038);
+  --text: light-dark(#20232a, #f2f4f8);
+  --muted: light-dark(#596374, #b0b7c5);
+  --line: light-dark(#d8dce4, #414651);
+  --accent: light-dark(#075fc5, #83baff);
+  --accent-ink: light-dark(#fff, #0a1a30);
+  --tint: light-dark(#e3edfc, #293c55);
+  --nav-active-bg: light-dark(#d8e5f8, #34435a);
+  --nav-active-text: light-dark(#184a90, #d4e7ff);
+  --danger: light-dark(#ae302c, #ff9992);
+  --shadow: 0 1px 3px light-dark(rgb(24 43 73 / 8%), rgb(0 0 0 / 22%));
+  --ease: cubic-bezier(.2,.72,.25,1);
   background: var(--canvas);
   color: var(--text);
+  accent-color: var(--accent);
 }
 :root[data-theme="light"] { color-scheme: light; }
 :root[data-theme="dark"] { color-scheme: dark; }
-* { box-sizing: border-box; }
-body { margin: 0; line-height: 1.5; }
-a { color: var(--accent); text-underline-offset: 3px; }
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-.app-shell { display: grid; grid-template-columns: 220px minmax(0, 1fr); min-height: 100vh; }
-.workspace { width: 100%; max-width: 960px; padding: clamp(28px, 5vw, 64px); }
-h1 { margin: 0 0 28px; font-size: clamp(1.8rem, 3.5vw, 2.45rem); line-height: 1.15; font-weight: 650; }
-h2 { margin: 0; font-size: 1.25rem; font-weight: 600; }
-p { color: var(--muted); margin: 8px 0 16px; }
-.panel { padding: clamp(20px, 3vw, 32px); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
-.section-icon { color: var(--accent); margin-bottom: 14px; }
-button {
-  background: var(--tint);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  color: var(--accent);
-  padding: 7px 14px;
-  font: inherit;
-  cursor: pointer;
+:root[data-font="arial"] { --ui-font: Arial, sans-serif; }
+:root[data-font="cormorant"] { --ui-font: "Inventory Cormorant", Georgia, serif; }
+:root[data-font="manrope"] { --ui-font: "Inventory Manrope", var(--system-font); }
+:root[data-font="harry-potter"] { --ui-font: "Inventory Wizard", Georgia, serif; }
+:root[data-custom-primary] {
+  --accent: light-dark(var(--primary-light), var(--primary-dark));
+  --tint: color-mix(in srgb, var(--choice-primary) 15%, var(--surface));
+  --nav-active-bg: color-mix(in srgb, var(--choice-primary) 14%, var(--sidebar));
+  --nav-active-text: var(--text);
 }
-@media (max-width: 680px) {
-  .app-shell { display: block; }
-  .workspace { padding: 28px 16px; }
+:root[data-custom-primary] .primary {
+  color: var(--primary-ink);
+  background: var(--choice-primary);
+  border-color: color-mix(in srgb, var(--choice-primary) 68%, var(--text));
+}
+:root[data-custom-primary] .primary:hover { filter: none; box-shadow: 0 0 0 1px var(--accent); }
+:root[data-custom-secondary] {
+  --canvas: light-dark(color-mix(in srgb, var(--choice-secondary) 7%, #fff), color-mix(in srgb, var(--choice-secondary) 7%, #15171d));
+  --sidebar: light-dark(color-mix(in srgb, var(--choice-secondary) 16%, #fff), color-mix(in srgb, var(--choice-secondary) 17%, #17191e));
+  --surface: light-dark(color-mix(in srgb, var(--choice-secondary) 3%, #fff), color-mix(in srgb, var(--choice-secondary) 8%, #22252c));
+  --control: light-dark(#fff, color-mix(in srgb, var(--choice-secondary) 10%, #282c34));
+  --line: light-dark(color-mix(in srgb, var(--choice-secondary) 22%, #e7e9ed), color-mix(in srgb, var(--choice-secondary) 22%, #434854));
+  --muted: light-dark(#4b5361, #c4cbd6);
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body, #app { height: 100%; margin: 0; }
+body { overflow: hidden; }
+button, input, select, textarea { font: inherit; }
+button, a { -webkit-tap-highlight-color: transparent; }
+button { cursor: pointer; }
+button:disabled { cursor: default; opacity: .5; }
+button:focus-visible, a:focus-visible, :focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px;
+}
+a { color: var(--accent); text-underline-offset: 3px; }
+::selection { background: color-mix(in srgb, var(--accent) 23%, var(--surface)); }
+
+.app-shell {
+  display: grid; grid-template-columns: clamp(178px, 18vw, 214px) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr); height: 100%; overflow: hidden;
+}
+.workspace {
+  min-width: 0; min-height: 0; height: 100%; overflow: auto;
+  padding: clamp(16px, 2.5vw, 30px) clamp(18px, 3vw, 42px);
+  scrollbar-width: thin;
+}
+h1, h2, h3 { margin: 0; color: var(--text); overflow-wrap: anywhere; }
+h1 { margin-bottom: 18px; font-size: clamp(1.643rem, calc(2.55vw + 2rem - 28px), 2.286rem); font-weight: 670; letter-spacing: -.035em; line-height: 1.14; }
+h2 { font-size: 1.2143rem; font-weight: 630; letter-spacing: -.018em; line-height: 1.25; }
+p { margin: 6px 0 12px; color: var(--muted); }
+.panel {
+  min-width: 0; padding: clamp(16px, 2.5vw, 24px); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow);
+}
+.section-icon { color: var(--accent); }
+.workspace-page { animation: workspace-appear 170ms var(--ease); }
+@keyframes workspace-appear {
+  from { opacity: .35; transform: translateY(3px); }
+  to { opacity: 1; transform: none; }
+}
+@media (max-width: 760px) {
+  .app-shell { grid-template-columns: minmax(0, 1fr); grid-template-rows: 45px minmax(0, 1fr); }
+  .workspace { padding: 13px 16px 14px; }
+  h1 { font-size: 1.643rem; }
+}
+@media (max-height: 560px) {
+  .workspace { padding-block: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-delay: 0s !important;
+    transition-duration: .01ms !important; transition-delay: 0s !important; scroll-behavior: auto !important; }
 }

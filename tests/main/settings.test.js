@@ -6,8 +6,9 @@ import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { createApplicationServices } from '../../src/main/createApplicationServices.js';
 import { migrate } from '../../src/main/database/migrate.js';
+import { DEFAULT_APPEARANCE } from '../../src/shared/settings.js';
 
-test('сохраняет выбранную тему в профиле и читает её после перезапуска', t => {
+test('сохраняет тему и оформление в профиле и читает настройки после перезапуска', t => {
   const userData = mkdtempSync(join(tmpdir(), 'inventory-settings-'));
   t.after(() => rmSync(userData, { recursive: true, force: true }));
   const options = { userData, name: 'Inventory', version: '0.1.0' };
@@ -15,6 +16,13 @@ test('сохраняет выбранную тему в профиле и чит
   try {
     assert.equal(first.settings.getTheme(), 'system');
     assert.equal(first.settings.setTheme('dark'), 'dark');
+    assert.deepEqual(first.settings.getAppearance(), DEFAULT_APPEARANCE);
+    const appearance = { fontSize: 16, fontFamily: 'harry-potter', primaryColor: '#9a4411', secondaryColor: null };
+    assert.deepEqual(first.settings.setAppearance({ ...appearance, primaryColor: '#9A4411' }), appearance);
+    for (const patch of [{ fontSize: 11 }, { fontSize: 17 }, { fontSize: 13.5 }, { fontFamily: 'other' },
+      { primaryColor: 'red' }, { secondaryColor: '#fff' }, { custom: true }]) {
+      assert.throws(() => first.settings.setAppearance({ ...appearance, ...patch }), TypeError);
+    }
     assert.throws(() => first.settings.setTheme('unknown'));
     assert.deepEqual(first.info, {
       name: 'Inventory', version: '0.1.0', databasePath: join(userData, 'data', 'inventory.sqlite'),
@@ -24,6 +32,12 @@ test('сохраняет выбранную тему в профиле и чит
   }
   const second = createApplicationServices(options);
   try {
+    assert.equal(second.settings.getTheme(), 'dark');
+    assert.deepEqual(second.settings.getAppearance(), {
+      fontSize: 16, fontFamily: 'harry-potter', primaryColor: '#9a4411', secondaryColor: null,
+    });
+    second.settings.setAppearance(DEFAULT_APPEARANCE);
+    assert.deepEqual(second.settings.getAppearance(), DEFAULT_APPEARANCE);
     assert.equal(second.settings.getTheme(), 'dark');
   } finally {
     second.close();
