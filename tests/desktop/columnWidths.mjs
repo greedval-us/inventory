@@ -96,6 +96,9 @@ export async function checkColumnWidths(window, evaluate, waitFor, phase) {
         const start = await pointFor(selector);
         const initial = await evaluate(query(selector) + '.closest("th").getBoundingClientRect().width');
         const width = target ?? Math.round(initial) + 62;
+        const stored = '(await window.inventory.listColumnWidths())[' + section.id + ']?.[' + JSON.stringify(key) + ']';
+        // Escape restores the stored preference. The rendered header may be a fractional pixel wider.
+        const expectedStored = cancel ? await evaluate('(async () => ' + stored + ')()') : width;
         const end = { x: start.x + width - Math.round(initial), y: start.y };
         await mouse('mouseMoved', start);
         await mouse('mousePressed', start, 'left', 1);
@@ -106,8 +109,7 @@ export async function checkColumnWidths(window, evaluate, waitFor, phase) {
           await expectWidth(section.name, key, initial);
         }
         await mouse('mouseReleased', end, 'left');
-        await waitFor('(async () => (await window.inventory.listColumnWidths())[' + section.id + ']?.['
-          + JSON.stringify(key) + '] === ' + (cancel ? initial : width) + ')()');
+        await waitFor('(async () => ' + stored + ' === ' + expectedStored + ')()');
       }
       await open('#/sections/' + a.id, disks);
       await drag(a, 'f_1');
