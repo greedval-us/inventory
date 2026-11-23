@@ -60,10 +60,14 @@ export async function checkSettingsLayout(window, evaluate, waitFor, fontSize) {
   for (const [width, height] of [[1120, 740], [1024, 620], [640, 480]]) {
     window.setContentSize(width, height);
     await waitFor('Math.abs(innerWidth - ' + width + ') <= 1 && Math.abs(innerHeight - ' + height + ') <= 1');
-    // Flush the responsive styles so Chromium starts any sidebar transition and requests its fonts.
+    // Flush the responsive styles and load the fonts before measuring the controls.
     await evaluate('document.body.getBoundingClientRect(); document.fonts.ready.then(() => true)');
-    await waitFor(`!document.getAnimations().some(animation =>
-      (animation.pending || animation.playState === 'running') && Number.isFinite(animation.effect?.getComputedTiming().endTime))`);
+    // A hidden window can suspend the page entrance or compact navigation transition mid-frame.
+    await evaluate(`for (const element of document.querySelectorAll('.workspace-page, #sidebar-nav')) {
+      for (const animation of element.getAnimations()) {
+        if (Number.isFinite(animation.effect.getComputedTiming().endTime)) animation.finish();
+      }
+    }`);
     const issues = await evaluate('(' + measureSettings + ')()');
     assert.deepEqual(issues, [], 'Настройки ' + width + '×' + height + ', шрифт ' + fontSize + 'px');
   }

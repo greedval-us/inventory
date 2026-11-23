@@ -18,6 +18,7 @@
     "build:preload": "vite build --config vite.preload.config.js",
     "build": "npm run build:preload && vite build",
     "test": "node --test tests/main/*.test.js tests/shared/*.test.js",
+    "check:files": "node scripts/checkRepositoryFiles.mjs",
     "check": "npm test && npm run build",
     "test:desktop": "npm run build && node scripts/checkDesktop.mjs",
     "pack:win": "npm run build && electron-builder --config electron-builder.config.cjs --win --dir",
@@ -27,8 +28,8 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "6.0.1",
-    "electron": "38.8.6",
-    "electron-builder": "24.13.3",
+    "electron": "45.4.1",
+    "electron-builder": "26.18.0",
     "esbuild": "0.28.2",
     "lucide-vue-next": "0.536.0",
     "pinia": "3.0.3",
@@ -39,10 +40,10 @@
     "vue-router": "4.5.1"
   },
   "overrides": {
-    "app-builder-lib": {
-      "tar": "7.5.21"
+    "exceljs": {
+      "uuid": "11.1.1"
     },
-    "builder-util-runtime": "9.7.0"
+    "minimatch@>=7 <11.0.1": "11.0.1"
   },
   "dependencies": {
     "exceljs": "4.4.0"

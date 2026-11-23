@@ -22,6 +22,7 @@ Inventory-????????-????-????-????-????????????/
 /backups/
 database-location.json
 database-location.json.*.tmp
+.inventory-storage.json
 .inventory-*.tmp
 .inventory-*.tmp-*
 *.sqlite
@@ -33,18 +34,21 @@ database-location.json.*.tmp
 *.bak
 *.backup
 
-# Рабочие выгрузки и таблицы, скопированные в корень проекта
+# Рабочие выгрузки и таблицы
 /exports/
-/*.xls
-/*.xlsx
-/*.xlsm
-/*.csv
+*.xls
+*.xlsx
+*.xlsm
+*.csv
+*.tsv
 
 # Приватные настройки и ключи подписи
 .env
 .env.*
 !.env.example
 .npmrc
+.aws/
+.ssh/
 *.pfx
 *.p12
 *.key
@@ -56,6 +60,23 @@ database-location.json.*.tmp
 .codex/
 .agents/
 .superpowers/
+.claude/
+.cursor/
+.windsurf/
+.continue/
+.aider*
+.cursorrules
+.windsurfrules
+AGENTS.md
+AGENTS.override.md
+CLAUDE.md
+CLAUDE.local.md
+GEMINI.md
+.gemini/
+.github/copilot-instructions.md
+.github/agents/
+.github/instructions/
+.github/prompts/
 .DS_Store
 Thumbs.db
 Desktop.ini

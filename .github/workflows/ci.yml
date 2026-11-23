@@ -28,8 +28,14 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
 
+      - name: Проверить состав репозитория
+        run: npm run check:files
+
       - name: Установить зависимости
-        run: npm ci
+        run: npm ci --no-audit
+
+      - name: Проверить зависимости
+        run: npm audit
 
       - name: Проверить логику приложения и SQLite
         run: npm test
