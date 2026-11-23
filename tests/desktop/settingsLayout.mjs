@@ -10,6 +10,20 @@ function measureSettings() {
   ];
   const issues = [];
   const containers = new Set([document.documentElement, document.body]);
+  const toggle = document.querySelector('[aria-controls="sidebar-nav"]');
+  const menu = document.getElementById(toggle.getAttribute('aria-controls'));
+  if (toggle.getClientRects().length && toggle.getAttribute('aria-expanded') === 'false' && menu.getClientRects().length) {
+    issues.push('Закрытое компактное меню занимает место над настройками');
+  }
+  function hitPath(element) {
+    const path = [];
+    for (; element && element !== document.body; element = element.parentElement) {
+      const action = element.getAttribute('data-action');
+      path.push(element.localName + (element.id ? '#' + element.id : '')
+        + Array.from(element.classList, name => '.' + name).join('') + (action ? '[data-action=' + action + ']' : ''));
+    }
+    return path.join(' < ');
+  }
   function measure(selector) {
     const controls = document.querySelectorAll('main ' + selector);
     if (!controls.length) issues.push('Нет элемента ' + selector);
@@ -24,7 +38,7 @@ function measureSettings() {
         issues.push({
           control: control.type === 'radio' ? selector + '=' + control.value : selector,
           rect: [rect.left, rect.top, rect.width, rect.height].map(Math.round),
-          hit: hit ? hit.localName + Array.from(hit.classList, item => '.' + item).join('') : null,
+          hit: hit ? hitPath(hit) : null,
         });
       }
       return rect;
