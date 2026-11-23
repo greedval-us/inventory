@@ -78,12 +78,6 @@ function currentMenuLinkIsReachable() {
 
 export async function checkSettingsLayout(window, evaluate, waitFor, fontSize) {
   const measure = '(' + measureSettings + ')()';
-  // Let Chromium produce frames on the Windows runner without taking focus.
-  if (!window.isVisible()) {
-    window.setOpacity(0);
-    window.setSkipTaskbar(true);
-    window.showInactive();
-  }
   async function resize(width, height) {
     window.setContentSize(width, height);
     await waitFor('Math.abs(innerWidth - ' + width + ') <= 1 && Math.abs(innerHeight - ' + height + ') <= 1');

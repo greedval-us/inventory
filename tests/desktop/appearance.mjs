@@ -31,6 +31,10 @@ async function sampleSelectedFont() {
 }
 
 export async function checkAppearance(window, evaluate, waitFor, phase) {
+  // Both launches need rendered frames to observe changes to computed styles.
+  window.setOpacity(0);
+  window.setSkipTaskbar(true);
+  window.showInactive();
   window.setContentSize(1120, 740);
   const fonts = control('select[name="fontFamily"]');
   const root = 'document.documentElement';
@@ -100,7 +104,9 @@ export async function checkAppearance(window, evaluate, waitFor, phase) {
     await evaluate(reset + '.click()');
     await waitFor(fonts + '.value === "system" && ' + control(sizeInput(14)) + '.checked');
     await waitFor('!document.documentElement.hasAttribute("data-custom-primary") && !document.documentElement.hasAttribute("data-custom-secondary")');
-    assert.deepEqual(await evaluate('(' + currentStyles + ')()'), await evaluate('JSON.parse(localStorage.getItem("smoke-default-appearance"))'));
+    // Vue updates the controls before Chromium paints the restored theme and SQLite finishes saving.
+    await waitFor('!document.querySelector(".settings-status")');
+    await waitFor('JSON.stringify((' + currentStyles + ')()) === localStorage.getItem("smoke-default-appearance")');
     assert.deepEqual(await evaluate('window.inventory.getAppearance()'), DEFAULT_APPEARANCE);
   }
   assert.equal(await evaluate('window.inventory.getTheme()'), 'dark');
