@@ -1,16 +1,17 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { fileURLToPath } from 'node:url';
 import electron from 'electron';
 
 const fixture = fileURLToPath(new URL('../tests/desktop/smoke.mjs', import.meta.url));
-const temporaryRoot = resolve(tmpdir());
+// Windows runners can supply an 8.3 alias in TEMP. Database and attachment pickers return full paths.
+const temporaryRoot = realpathSync.native(tmpdir());
 const profile = mkdtempSync(join(temporaryRoot, 'inventory-desktop-'));
-const environment = { ...process.env };
+const environment = { ...process.env, TEMP: temporaryRoot, TMP: temporaryRoot, TMPDIR: temporaryRoot };
 delete environment.ELECTRON_RUN_AS_NODE;
 delete environment.INVENTORY_DEV_SERVER_URL;
 

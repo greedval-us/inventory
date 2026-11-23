@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
-import { closeSync, existsSync, mkdtempSync, openSync, readSync, rmSync } from 'node:fs';
+import { closeSync, existsSync, mkdtempSync, openSync, readSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir, release } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
@@ -139,7 +139,7 @@ async function runPhase(profile, phase) {
 }
 
 const nodeVersion = checkRuntime();
-const temporaryRoot = resolve(tmpdir());
+const temporaryRoot = realpathSync.native(tmpdir());
 const profile = mkdtempSync(join(temporaryRoot, 'inventory-legacy-'));
 try {
   await runPhase(profile, 'initial');
