@@ -163,7 +163,7 @@ onBeforeUnmount(() => {
     position: absolute; inset: calc(100% + 5px) 9px auto auto; width: min(270px, calc(100vw - 18px));
     max-height: calc(100dvh - 58px); padding: 8px; border: 1px solid var(--line); border-radius: 12px;
     background: var(--surface); box-shadow: 0 9px 30px #11172828; visibility: hidden; opacity: 0;
-    transform: translateY(-4px); transition: opacity 150ms var(--ease), transform 150ms var(--ease), visibility 150ms;
+    transform: translateY(-4px); transition: opacity 150ms var(--ease), transform 150ms var(--ease);
   }
   .menu-open .sidebar-nav { visibility: visible; opacity: 1; transform: none; }
 }
