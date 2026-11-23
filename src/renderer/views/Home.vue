@@ -9,9 +9,8 @@ import RecordGrid from '../registry/RecordGrid.vue';
 import RegistrySearch from '../registry/RegistrySearch.vue';
 import RegistryHeading from '../registry/RegistryHeading.vue';
 import SectionResults from '../registry/SectionResults.vue';
-import RecordEditor from '../registry/RecordEditor.vue';
 import DeleteRecord from '../registry/DeleteRecord.vue';
-import ExportExcelDialog from '../registry/ExportExcelDialog.vue';
+import { ExportExcelDialog, RecordEditor } from '../registry/asyncDialogs';
 import '../registry/registry-view.css';
 
 const store = useRegistryStore();

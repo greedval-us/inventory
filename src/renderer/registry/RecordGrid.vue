@@ -3,7 +3,7 @@ import { computed, shallowRef } from 'vue';
 import { ChevronLeft, ChevronRight, Images, Paperclip, Pencil, Trash2 } from 'lucide-vue-next';
 import { useRegistryStore } from '../stores/registryStore';
 import { displayCell, type Attachment, type RegistryRow, type TableField, type TableSchema } from './catalog';
-import PhotoPreviewDialog from './PhotoPreviewDialog.vue';
+import { PhotoPreviewDialog } from './asyncDialogs';
 import SortableColumnHeader from './SortableColumnHeader.vue';
 import { useColumnLayout } from './useColumnLayout';
 

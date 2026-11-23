@@ -1,5 +1,4 @@
 import { randomUUID } from 'node:crypto';
-import { openPhotoStream } from '../attachments/photoStream.js';
 
 export const photoScheme = 'inventory-photo';
 
@@ -22,6 +21,8 @@ export function createPhotoProtocol(services, getWindow) {
     if (!valid() || request.url !== ticket.url || request.method !== 'GET') return { statusCode: 404, data: null };
     let file;
     try {
+      const { openPhotoStream } = await import('../attachments/photoStream.js');
+      if (!valid()) return { statusCode: 404, data: null };
       // A draft may have been removed, the row deleted or its field changed after the URL was issued.
       const source = services.attachments.photoSource(ticket.owner);
       file = await openPhotoStream(source, valid);

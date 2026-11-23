@@ -2,11 +2,43 @@ import { migrations } from './migrations.js';
 
 export const APPLICATION_ID = 0x494e5654; // INVT
 
+function readHeader(db) {
+  return {
+    appId: db.prepare('PRAGMA application_id').get().application_id,
+    version: db.prepare('PRAGMA user_version').get().user_version,
+  };
+}
+
+function checkExistingSchema(db) {
+  db.prepare('SELECT key, value FROM app_settings');
+  db.prepare('SELECT id, name, name_key, description, fields, collection_id, last_field_id FROM catalog_tables');
+  db.prepare('SELECT id, table_id, search_values FROM catalog_records');
+  db.prepare('SELECT id, name, name_key FROM catalog_collections');
+  db.prepare('SELECT singleton, last_id FROM catalog_table_sequence');
+  db.prepare('SELECT table_id, field_key, direction FROM catalog_table_sorts');
+  db.prepare('SELECT table_id, field_key, width FROM catalog_column_widths');
+  db.prepare('SELECT id, record_id, field_key, position, name, size FROM catalog_attachments');
+  db.prepare('SELECT id, storage FROM removed_attachments');
+}
+
+function hasCurrentSchema(db, existingOnly) {
+  db.exec('BEGIN');
+  try {
+    const { appId, version } = readHeader(db);
+    if (appId !== APPLICATION_ID || version !== migrations.length) return false;
+    if (existingOnly) checkExistingSchema(db);
+    return true;
+  } finally {
+    db.exec('ROLLBACK');
+  }
+}
+
 export function migrate(db, existingOnly = false) {
+  if (hasCurrentSchema(db, existingOnly)) return;
+  // Another connection may have migrated the database since the read transaction ended.
   db.exec('BEGIN IMMEDIATE');
   try {
-    const { application_id: appId } = db.prepare('PRAGMA application_id').get();
-    const { user_version: version } = db.prepare('PRAGMA user_version').get();
+    const { appId, version } = readHeader(db);
     if (appId !== APPLICATION_ID) {
       const hasSchema = db.prepare("SELECT 1 FROM sqlite_schema WHERE name NOT GLOB 'sqlite_*' LIMIT 1").get();
       if (existingOnly || appId !== 0 || version !== 0 || hasSchema) {
@@ -21,18 +53,7 @@ export function migrate(db, existingOnly = false) {
       db.exec(migrations[index]);
       db.exec(`PRAGMA user_version = ${index + 1}`);
     }
-    if (existingOnly) {
-      // Preparing these queries also checks older profiles after migration, before COMMIT.
-      db.prepare('SELECT key, value FROM app_settings');
-      db.prepare('SELECT id, name, name_key, description, fields, collection_id, last_field_id FROM catalog_tables');
-      db.prepare('SELECT id, table_id, search_values FROM catalog_records');
-      db.prepare('SELECT id, name, name_key FROM catalog_collections');
-      db.prepare('SELECT singleton, last_id FROM catalog_table_sequence');
-      db.prepare('SELECT table_id, field_key, direction FROM catalog_table_sorts');
-      db.prepare('SELECT table_id, field_key, width FROM catalog_column_widths');
-      db.prepare('SELECT id, record_id, field_key, position, name, size FROM catalog_attachments');
-      db.prepare('SELECT id, storage FROM removed_attachments');
-    }
+    if (existingOnly) checkExistingSchema(db);
     db.exec('COMMIT');
   } catch (error) {
     db.exec('ROLLBACK');

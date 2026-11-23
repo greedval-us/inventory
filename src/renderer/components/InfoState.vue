@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { onBeforeMount } from 'vue';
 import { useInfoStore } from '../stores/infoStore.js';
 const store = useInfoStore();
+onBeforeMount(store.load);
 </script>
 
 <template>

@@ -23,7 +23,7 @@ export function readTableRows(db, table, ids) {
   return ids.map(id => byId.get(id));
 }
 
-const alphabet = new Intl.Collator('ru', { sensitivity: 'accent', numeric: true });
+let alphabet;
 
 export function orderedRows(db, table, matches, params, { sort, fields = table.fields, limit = -1, offset = 0 }) {
   const field = sort == null ? null : requireSortField(table, sort);
@@ -39,6 +39,7 @@ export function orderedRows(db, table, matches, params, { sort, fields = table.f
       value: field.type === 'files' ? formatCellValue('files', row[sortKey]) || null : row[sortKey]?.trim() ?? null,
     }));
     const sign = sort.direction === 'asc' ? 1 : -1;
+    alphabet ??= new Intl.Collator('ru', { sensitivity: 'accent', numeric: true });
     keys.sort((a, b) => {
       if (a.value === null || b.value === null) return Number(a.value === null) - Number(b.value === null) || b.id - a.id;
       return sign * alphabet.compare(a.value, b.value) || b.id - a.id;

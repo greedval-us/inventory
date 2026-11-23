@@ -65,6 +65,26 @@ test('перенос копирует согласованный снимок с
   assert.deepEqual(original.catalog.listTables(), []);
 });
 
+test('открывает актуальную базу, пока другое соединение пишет в WAL', t => {
+  const { start } = fixture(t);
+  const app = start();
+  app.settings.setTheme('dark');
+  const path = app.info.databasePath;
+  app.openDatabase(path);
+  app.close();
+
+  const writer = new DatabaseSync(path);
+  try {
+    writer.exec("BEGIN IMMEDIATE; UPDATE app_settings SET value = 'light' WHERE key = 'theme'");
+    const reader = start();
+    assert.equal(reader.settings.getTheme(), 'dark');
+    writer.exec('COMMIT');
+    assert.equal(reader.settings.getTheme(), 'light');
+  } finally {
+    writer.close();
+  }
+});
+
 test('избегает замены файлов, журналов и активной базы под другим именем', t => {
   const { start, folder } = fixture(t);
   const app = start();

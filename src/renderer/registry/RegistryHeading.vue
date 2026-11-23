@@ -6,8 +6,7 @@ import { useRegistryStore } from '../stores/registryStore';
 import type { Collection, TableSchema } from './catalog';
 import CollectionEditor from './CollectionEditor.vue';
 import CopySectionDialog from './CopySectionDialog.vue';
-import ImportExcelDialog from './ImportExcelDialog.vue';
-import SectionEditor from './SectionEditor.vue';
+import { ImportExcelDialog, SectionEditor } from './asyncDialogs';
 
 const props = defineProps<{ title: string; table?: TableSchema; collection?: Collection }>();
 const emit = defineEmits<{ add: []; changed: []; export: []; imported: [added: number] }>();

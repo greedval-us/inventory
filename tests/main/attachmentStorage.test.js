@@ -94,7 +94,9 @@ test('ссылка просмотра ограничена окном, теку�
   bytes = Buffer.from('GIF89a');
   writeFileSync(path, bytes);
   const original = protocol.preview({});
+  const pending = get(original);
   const active = protocol.preview({});
+  assert.equal((await pending).statusCode, 404);
   assert.equal((await get(original)).statusCode, 404);
   assert.equal((await get(active, 'POST')).statusCode, 404);
   assert.equal((await get(active + '?other')).statusCode, 404);

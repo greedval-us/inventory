@@ -1,6 +1,7 @@
 import { computed, ref } from 'vue';
 import { defineStore } from 'pinia';
 import { normalizeLabel } from '../../shared/catalogFields.js';
+import { DEFAULT_PAGE_SIZE, GROUP_SCROLL_PAGE_SIZE } from '../../shared/registryPaging.js';
 import { errorMessage, registryFieldLabels } from '../registry/catalog';
 import { useCatalogSchema } from './useCatalogSchema';
 import { useColumnWidths } from './useColumnWidths';
@@ -87,6 +88,10 @@ export const useRegistryStore = defineStore('registry', () => {
     tableId.value = scope.tableId;
     collectionId.value = scope.collectionId;
     pruneSorts();
+    if (current === 1 && scope.tableId === null && !filtered.value && scopedTables.value.length > 1) {
+      // Share the first page across sections until the view measures how many rows fit.
+      records.setPageSize(Math.max(GROUP_SCROLL_PAGE_SIZE, Math.ceil(DEFAULT_PAGE_SIZE / scopedTables.value.length)));
+    }
     ready.value = true;
     await loadRows();
   }

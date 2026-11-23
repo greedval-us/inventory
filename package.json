@@ -12,8 +12,9 @@
     "node": ">=22.13.0"
   },
   "scripts": {
-    "dev": "npm run build:preload && concurrently -k -s first \"vite\" \"vite build --config vite.preload.config.js --watch\" \"wait-on http://127.0.0.1:5175 build/main/preload.cjs && cross-env INVENTORY_DEV_SERVER_URL=http://127.0.0.1:5175 node scripts/runElectron.mjs\"",
+    "dev": "node scripts/runElectron.mjs --dev",
     "start": "npm run build && node scripts/runElectron.mjs",
+    "start:built": "node scripts/runElectron.mjs",
     "build:preload": "vite build --config vite.preload.config.js",
     "build": "npm run build:preload && vite build",
     "test": "node --test tests/main/*.test.js tests/shared/*.test.js",
@@ -26,8 +27,6 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "6.0.1",
-    "concurrently": "9.2.0",
-    "cross-env": "10.1.0",
     "electron": "38.8.6",
     "electron-builder": "24.13.3",
     "esbuild": "0.28.2",
@@ -37,8 +36,7 @@
     "tar": "7.5.21",
     "vite": "7.3.7",
     "vue": "3.5.44",
-    "vue-router": "4.5.1",
-    "wait-on": "8.0.4"
+    "vue-router": "4.5.1"
   },
   "overrides": {
     "app-builder-lib": {

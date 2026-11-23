@@ -5,7 +5,7 @@ import { Archive, Info, LayoutGrid, PanelLeft, Settings } from 'lucide-vue-next'
 import { useRegistryStore } from '../stores/registryStore';
 import type { Collection, TableSchema } from '../registry/catalog';
 import CollectionEditor from '../registry/CollectionEditor.vue';
-import SectionEditor from '../registry/SectionEditor.vue';
+import { SectionEditor } from '../registry/asyncDialogs';
 import LibraryNavigation from './LibraryNavigation.vue';
 
 const registry = useRegistryStore();

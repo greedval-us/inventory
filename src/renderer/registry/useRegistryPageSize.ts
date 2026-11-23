@@ -1,5 +1,5 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { DEFAULT_PAGE_SIZE } from '../../shared/registryPaging.js';
+import { DEFAULT_PAGE_SIZE, GROUP_SCROLL_PAGE_SIZE } from '../../shared/registryPaging.js';
 import type { useRegistryStore } from '../stores/registryStore';
 
 function measureTable(card: HTMLElement, total: number) {
@@ -30,7 +30,7 @@ function rowsThatFit(area: HTMLElement, totals: number[]) {
     if (required <= available) return limit;
   }
   // When even one row per section exceeds the viewport, keep several records together while scrolling.
-  return tables.length > 1 ? 3 : 1;
+  return tables.length > 1 ? GROUP_SCROLL_PAGE_SIZE : 1;
 }
 
 export function useRegistryPageSize(store: ReturnType<typeof useRegistryStore>) {
@@ -41,6 +41,7 @@ export function useRegistryPageSize(store: ReturnType<typeof useRegistryStore>) 
     : [[store.tableId, store.total]]);
   let observer: ResizeObserver;
   let lastLayout = '';
+  let checkExpandedRows = false;
   let measuredTables: typeof store.tables | undefined;
   let measuredWidths: typeof store.columnWidths | undefined;
   onMounted(() => {
@@ -55,13 +56,22 @@ export function useRegistryPageSize(store: ReturnType<typeof useRegistryStore>) 
     if (!area.value || !viewport.value || !store.ready || store.loading || store.error) return;
     // Keep page boundaries stable while browsing. Re-measure when the results or window change.
     const layout = JSON.stringify([viewport.value, store.tableId, groups.value, store.query, store.field, store.hiddenMatchCount]);
-    if (layout === lastLayout && measuredTables === store.tables && measuredWidths === store.columnWidths) return;
+    const sameLayout = layout === lastLayout && measuredTables === store.tables && measuredWidths === store.columnWidths;
+    if (sameLayout) {
+      if (!checkExpandedRows) return;
+      checkExpandedRows = false;
+      if (store.visibleSections.some(section => section.offset !== 0)) return;
+    }
     const size = rowsThatFit(area.value, groups.value.map(group => group[1]));
     if (size !== undefined) {
       measuredTables = store.tables;
       measuredWidths = store.columnWidths;
       lastLayout = layout;
-      store.setPageSize(size);
+      // Rows added to the first page can wrap differently. Check the expanded page once.
+      const next = sameLayout ? Math.min(size, store.pageSize) : size;
+      checkExpandedRows = store.tableId == null && next > store.pageSize
+        && store.visibleSections.some(section => section.total > store.pageSize);
+      store.setPageSize(next);
     }
   }, { flush: 'post' });
   return area;
